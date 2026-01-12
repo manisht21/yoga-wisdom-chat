@@ -190,7 +190,7 @@ npm run dev
 
 ## 12. Deployment
 
-https://lovable.dev/projects/<your-project-id>
+(https://zen-guide-helper.lovable.app)
 
 ---
 
