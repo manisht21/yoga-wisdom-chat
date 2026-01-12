@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { ChatMessage, Message } from "@/components/ChatMessage";
+import { ChatMessage, Message, RetrievedChunk } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { AdminPanel } from "@/components/AdminPanel";
-import { searchKnowledgeBase, KnowledgeItem } from "@/data/yogaKnowledgeBase";
 import { classifyQuery, standardDisclaimer, mildConditionDisclaimer } from "@/lib/safetyClassifier";
-import { logInteraction } from "@/lib/interactionLogger";
+import { logInteraction } from "@/lib/dbLogger";
 import { Settings, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -23,18 +22,6 @@ export default function Index() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const buildContext = (items: KnowledgeItem[]): string => {
-    if (items.length === 0) return "No relevant information found in the knowledge base.";
-    return items.map(item => `
-### ${item.title} (${item.type})
-**Category:** ${item.category} | **Difficulty:** ${item.difficulty}
-**Description:** ${item.description}
-**Benefits:** ${item.benefits.join(", ")}
-${item.contraindications.length > 0 ? `**Contraindications:** ${item.contraindications.join(", ")}` : ""}
-${item.steps ? `**Steps:** ${item.steps.join(" → ")}` : ""}
-    `.trim()).join("\n\n---\n\n");
-  };
-
   const handleSend = async (query: string) => {
     const startTime = Date.now();
     const userMessage: Message = { id: crypto.randomUUID(), role: "user", content: query };
@@ -51,13 +38,21 @@ ${item.steps ? `**Steps:** ${item.steps.join(" → ")}` : ""}
         isBlocked: true,
       };
       setMessages(prev => [...prev, blockedMessage]);
-      logInteraction(query, [], blockedMessage.content, safetyResult, startTime);
+      
+      // Log blocked interaction to database
+      await logInteraction(
+        query,
+        [],
+        blockedMessage.content,
+        safetyResult.classification,
+        safetyResult.riskLevel,
+        true,
+        Date.now() - startTime
+      );
+      
       setIsLoading(false);
       return;
     }
-
-    const retrievedItems = searchKnowledgeBase(query);
-    const context = buildContext(retrievedItems);
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -66,11 +61,24 @@ ${item.steps ? `**Steps:** ${item.steps.join(" → ")}` : ""}
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ query, context, safetyInfo: safetyResult }),
+        body: JSON.stringify({ query, safetyInfo: safetyResult }),
       });
 
       if (!resp.ok) {
         throw new Error(`Request failed: ${resp.status}`);
+      }
+
+      // Get retrieved chunks from header
+      const chunksHeader = resp.headers.get('X-Retrieved-Chunks');
+      const latencyHeader = resp.headers.get('X-Latency-Ms');
+      let retrievedChunks: RetrievedChunk[] = [];
+      
+      try {
+        if (chunksHeader) {
+          retrievedChunks = JSON.parse(chunksHeader);
+        }
+      } catch (e) {
+        console.warn('Failed to parse retrieved chunks header');
       }
 
       const reader = resp.body?.getReader();
@@ -105,7 +113,12 @@ ${item.steps ? `**Steps:** ${item.steps.join(" → ")}` : ""}
                 if (last?.role === "assistant") {
                   return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
                 }
-                return [...prev, { id: crypto.randomUUID(), role: "assistant", content: assistantContent, sources: retrievedItems }];
+                return [...prev, { 
+                  id: crypto.randomUUID(), 
+                  role: "assistant", 
+                  content: assistantContent, 
+                  sources: retrievedChunks 
+                }];
               });
             }
           } catch { /* ignore partial JSON */ }
@@ -120,8 +133,24 @@ ${item.steps ? `**Steps:** ${item.steps.join(" → ")}` : ""}
         finalContent += `\n\n---\n\n${mildConditionDisclaimer}`;
       }
 
-      setMessages(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: finalContent } : m));
-      logInteraction(query, retrievedItems, finalContent, safetyResult, startTime);
+      const latencyMs = Date.now() - startTime;
+
+      // Log interaction to database and get ID for feedback
+      const interactionId = await logInteraction(
+        query,
+        retrievedChunks,
+        finalContent,
+        safetyResult.classification,
+        safetyResult.riskLevel,
+        false,
+        latencyMs
+      );
+
+      // Update final message with disclaimer and interaction ID
+      setMessages(prev => prev.map((m, i) => 
+        i === prev.length - 1 ? { ...m, content: finalContent, interactionId: interactionId || undefined } : m
+      ));
+
     } catch (error) {
       console.error("Chat error:", error);
       toast({ title: "Error", description: "Failed to get response. Please try again.", variant: "destructive" });
