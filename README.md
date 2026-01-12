@@ -173,7 +173,48 @@ This project was built using Lovable AI.
 
 All UI, backend, RAG, database, and safety logic were created using the following prompts:
 
-(Paste the full Lovable prompt history here)
+### Lovable Prompt History
+
+Jan 9, 3:23 PM  
+Lovable AI Prompt: "Ask Me Anything About Yoga" RAG Application  
+Build a full-stack RAG (Retrieval-Augmented Generation) wellness application with:
+- A chat interface titled "Ask Me Anything About Yoga"
+- Knowledge base for yoga, poses, pranayama and wellness
+- Source citations
+- Safety filtering
+- Interaction logging
+- Calm wellness design
+
+Jan 9, 3:24 PM  
+Enable Lovable Cloud and AI Gateway for chat, database, and backend functions.
+
+Jan 9, 3:25 PM  
+Build the complete yoga RAG application including:
+- UI design
+- Knowledge base
+- RAG pipeline
+- Safety classifier
+- Edge functions
+- Admin panel
+
+Jan 9, 3:31 PM  
+Test the application and fix edge function configuration issues.
+
+Jan 12, 7:47 PM  
+Upgrade the project to Track-B Wellness RAG specification:
+- Add embeddings-based RAG
+- Add database logging
+- Add feedback system
+- Expand knowledge base to 25+ items
+
+Jan 12, 7:47 PM  
+Implement:
+- Vector embeddings
+- Semantic retrieval
+- MongoDB-style logging
+- /feedback API
+- Safety flags and UI warnings
+
 
 This ensures transparency and reproducibility.
 
