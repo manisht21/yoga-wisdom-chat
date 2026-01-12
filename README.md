@@ -1,73 +1,200 @@
-# Welcome to your Lovable project
+# 🧘 Ask Me Anything About Yoga  
+Track B – Wellness RAG Micro-App
 
-## Project info
+---
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 1. Project Overview
 
-## How can I edit this code?
+This project is a full-stack Retrieval-Augmented Generation (RAG) wellness assistant that answers yoga and fitness-related questions using a curated knowledge base, semantic embeddings, and a safety-aware AI backend.
 
-There are several ways of editing your application.
+It is designed to:
+- Retrieve relevant yoga articles using vector similarity
+- Inject retrieved context into the AI prompt
+- Apply safety filtering for risky health queries
+- Log all interactions and feedback in a database
 
-**Use Lovable**
+The UI allows users to:
+- Ask yoga-related questions
+- View AI answers
+- See which sources were used
+- Receive safety warnings when applicable
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 2. System Architecture
 
-**Use your preferred IDE**
+Frontend (React)  
+→ API Layer (/ask, /feedback)  
+→ RAG Engine (Embeddings + Vector Search)  
+→ Yoga Knowledge Base  
+→ LLM with Retrieved Context  
+→ Database (Queries, Sources, Safety, Feedback)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 3. Tech Stack
 
-Follow these steps:
+Frontend  
+- React (Vite)  
+- TypeScript  
+- Tailwind CSS  
+- shadcn-ui  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Backend  
+- Node.js (Lovable Cloud Edge Functions)  
+- REST APIs:  
+  - POST /ask  
+  - POST /feedback  
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Database  
+- MongoDB-style cloud database (via Lovable Cloud)  
+Stores:
+- User queries  
+- Retrieved chunks  
+- Final AI answers  
+- Safety flags  
+- Timestamps  
+- User feedback  
 
-# Step 3: Install the necessary dependencies.
-npm i
+Vector Store  
+- In-memory vector store with cosine similarity  
+- Pre-computed embeddings for all yoga knowledge chunks  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+AI Model  
+- Lovable AI Gateway (LLM)
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 4. Knowledge Base
 
-**Use GitHub Codespaces**
+The knowledge base contains 25+ curated yoga articles covering:
+- Common asanas  
+- Benefits  
+- Contraindications  
+- Pranayama  
+- Meditation  
+- Beginner vs advanced practices  
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Each article is chunked, embedded, and stored in a vector index.
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 5. RAG Pipeline
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. User enters a query  
+2. Query is converted into an embedding  
+3. Top-K relevant chunks are retrieved using cosine similarity  
+4. Retrieved chunks are injected into the LLM prompt  
+5. The LLM generates a grounded answer  
+6. Sources are returned to the UI  
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 6. Safety Layer
 
-## Can I connect a custom domain to my Lovable project?
+The backend checks for risky keywords such as:
+- Pregnancy  
+- Hernia  
+- High blood pressure  
+- Glaucoma  
+- Recent surgery  
 
-Yes, you can!
+If detected:
+- isUnsafe = true  
+- Stored in database  
+- UI shows red warning banner  
+- AI provides:
+  - Gentle warning  
+  - Safer alternatives  
+  - Professional advice notice  
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 7. API Endpoints
+
+POST /ask  
+
+Input:
+{
+  "query": "Is headstand safe during pregnancy?"
+}
+
+Output:
+{
+  "answer": "...",
+  "sources": ["Article 12", "Article 7"],
+  "isUnsafe": true
+}
+
+POST /feedback  
+
+{
+  "interaction_id": "uuid",
+  "feedback_type": "positive"
+}
+
+---
+
+## 8. Database Schema
+
+chat_interactions  
+- id  
+- query  
+- retrieved_chunks  
+- response  
+- safety_classification  
+- risk_level  
+- blocked  
+- latency_ms  
+- created_at  
+
+user_feedback  
+- id  
+- interaction_id  
+- feedback_type  
+- created_at  
+
+---
+
+## 9. Frontend Features
+
+- Chat interface  
+- Loading spinner  
+- Source list  
+- Safety warning banner  
+- Feedback buttons 👍 👎  
+- Admin panel  
+
+---
+
+## 10. AI IDE & Prompt Disclosure
+
+This project was built using Lovable AI.
+
+All UI, backend, RAG, database, and safety logic were created using the following prompts:
+
+(Paste the full Lovable prompt history here)
+
+This ensures transparency and reproducibility.
+
+---
+
+## 11. Run Locally
+
+git clone <repo>  
+cd <project>  
+npm install  
+npm run dev  
+
+---
+
+## 12. Deployment
+
+https://lovable.dev/projects/<your-project-id>
+
+---
+
+## 13. APK Note
+
+This is a web-based AI system.  
+A React Native APK would require a separate project.
