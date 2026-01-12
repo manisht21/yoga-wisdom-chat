@@ -14,7 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_interactions: {
+        Row: {
+          blocked: boolean
+          created_at: string
+          id: string
+          latency_ms: number
+          query: string
+          response: string
+          retrieved_chunks: Json
+          risk_level: string
+          safety_classification: string
+        }
+        Insert: {
+          blocked?: boolean
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          query: string
+          response: string
+          retrieved_chunks?: Json
+          risk_level: string
+          safety_classification: string
+        }
+        Update: {
+          blocked?: boolean
+          created_at?: string
+          id?: string
+          latency_ms?: number
+          query?: string
+          response?: string
+          retrieved_chunks?: Json
+          risk_level?: string
+          safety_classification?: string
+        }
+        Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          created_at: string
+          feedback_type: string
+          id: string
+          interaction_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_type: string
+          id?: string
+          interaction_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          interaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_interaction_id_fkey"
+            columns: ["interaction_id"]
+            isOneToOne: false
+            referencedRelation: "chat_interactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
