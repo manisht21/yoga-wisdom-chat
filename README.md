@@ -239,3 +239,5 @@ npm run dev
 
 This is a web-based AI system.  
 A React Native APK would require a separate project.
+## Demo Video
+link: https://drive.google.com/file/d/1DiPIia6X6st3XbaHWk9l81DN1gRop-sL/view?usp=sharing
